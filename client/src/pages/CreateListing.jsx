@@ -7,10 +7,11 @@ import variables from "../styles/variables.scss";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { IoIosImages } from "react-icons/io";
 import { BiTrash } from "react-icons/bi";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 const CreateListing = () => {
   const [category, setCategory] = useState("");
   const [type, setType] = useState("");
-  const [amenities, setAmenities] = useState([]);
 
   //Location
   const [formLocation, setFormLocation] = useState({
@@ -34,6 +35,16 @@ const CreateListing = () => {
   const [bedCount, setBedCount] = useState(1);
   const [bathroomCount, setBathroomCount] = useState(1);
 
+  //Amenities, Facilities
+  const [amenities, setAmenities] = useState([]);
+  const handleSelectAmenities = (facility) => {
+    if (amenities.includes(facility)) {
+      setAmenities((prev) => prev.filter((option) => option !== facility));
+    } else {
+      setAmenities((prev) => [...prev, facility]);
+    }
+  };
+
   //Upload, drag, drop, remove photos
   const [photos, setPhotos] = useState([]);
 
@@ -54,12 +65,73 @@ const CreateListing = () => {
     setPhotos((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
+  //Description
+  const [formDescription, setFormDescription] = useState({
+    title: "",
+    description: "",
+    highlight: "",
+    highlightDesc: "",
+    price: 0,
+  });
+  const handleChangeDescription = (e) => {
+    const { name, value } = e.target;
+    setFormDescription({
+      ...formDescription,
+      [name]: value,
+    });
+  };
+
+  //get user id
+  const navigate = useNavigate();
+  const creatorId = useSelector((state) => state.user._id);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const listingForm = new FormData();
+      listingForm.append("creator", creatorId);
+      listingForm.append("category", category);
+      listingForm.append("type", type);
+      listingForm.append("streetAddress", formLocation.streetAddress);
+      listingForm.append("aptSuite", formLocation.aptSuite);
+      listingForm.append("city", formLocation.city);
+      listingForm.append("province", formLocation.province);
+      listingForm.append("country", formLocation.country);
+      listingForm.append("guestCount", guestCount);
+      listingForm.append("bedroomCount", bedroomCount);
+      listingForm.append("bedCount", bedCount);
+      listingForm.append("bathroomCount", bathroomCount);
+      listingForm.append("amenities", amenities);
+      listingForm.append("title", formDescription.title);
+      listingForm.append("description", formDescription.description);
+      listingForm.append("highlight", formDescription.highlight);
+      listingForm.append("highlightDesc", formDescription.highlightDesc);
+      listingForm.append("price", formDescription.price);
+
+      //append photos to formData
+      photos.forEach((photo) => {
+        listingForm.append("listingPhotos", photo);
+      });
+      console.log("hiii")
+      const response = await fetch("http://localhost:3001/properties/create", {
+        method: "POST",
+        body: listingForm,
+      });
+      console.log(response)
+      if (response.ok) {
+        navigate("/");
+      }
+    } catch (err) {
+      console.log("publish listing failed");
+    }
+  };
+
   return (
     <>
       <Navbar />
       <div className="create-listing">
         <h1>Publish Your Place</h1>
-        <form action="">
+        <form onSubmit={handleSubmit}>
           <div className="create-listing_step1">
             <h2>Step 1: Tell us about your place</h2>
             <hr />
@@ -163,9 +235,7 @@ const CreateListing = () => {
                 <div className="basic_count">
                   <RemoveCircleOutline
                     onClick={() => {
-                      guestCount > 1
-                        && setGuestCount(guestCount - 1)
-                        ;
+                      guestCount > 1 && setGuestCount(guestCount - 1);
                     }}
                     sx={{
                       fontSize: "25px",
@@ -191,9 +261,7 @@ const CreateListing = () => {
                 <div className="basic_count">
                   <RemoveCircleOutline
                     onClick={() => {
-                      bedroomCount > 1
-                        && setBedroomCount(bedroomCount - 1)
-                        ;
+                      bedroomCount > 1 && setBedroomCount(bedroomCount - 1);
                     }}
                     sx={{
                       fontSize: "25px",
@@ -219,9 +287,7 @@ const CreateListing = () => {
                 <div className="basic_count">
                   <RemoveCircleOutline
                     onClick={() => {
-                      bedCount > 1
-                        && setBedCount(bedCount - 1)
-                        ;
+                      bedCount > 1 && setBedCount(bedCount - 1);
                     }}
                     sx={{
                       fontSize: "25px",
@@ -275,10 +341,16 @@ const CreateListing = () => {
             <hr />
             <h3>Tell guests what your place has to offer</h3>
             <div className="amenities">
-              {facilities?.map((facility, index) => (
-                <div className="facility" key={index}>
-                  <div className="facility_icon">{facility.icon}</div>
-                  <p>{facility.name}</p>
+              {facilities?.map((item, index) => (
+                <div
+                  className={`facility ${
+                    amenities.includes(item.name) ? "selected" : ""
+                  } `}
+                  key={index}
+                  onClick={() => handleSelectAmenities(item.name)}
+                >
+                  <div className="facility_icon">{item.icon}</div>
+                  <p>{item.name}</p>
                 </div>
               ))}
             </div>
@@ -366,12 +438,21 @@ const CreateListing = () => {
             <h3>what make your place attractive and exciting?</h3>
             <div className="description">
               <p>Title</p>
-              <input type="text" name="title" placeholder="Title" required />
+              <input
+                type="text"
+                name="title"
+                placeholder="Title"
+                value={formDescription.title}
+                onChange={handleChangeDescription}
+                required
+              />
               <p>Description</p>
               <textarea
                 type="text"
                 name="description"
                 placeholder="Description"
+                value={formDescription.description}
+                onChange={handleChangeDescription}
                 required
               />
               <p>Highlight</p>
@@ -379,6 +460,8 @@ const CreateListing = () => {
                 type="text"
                 name="highlight"
                 placeholder="Highlight"
+                value={formDescription.highlight}
+                onChange={handleChangeDescription}
                 required
               />
               <p>Highlight Details</p>
@@ -386,6 +469,8 @@ const CreateListing = () => {
                 type="text"
                 name="highlightDesc"
                 placeholder="Highlight Details"
+                value={formDescription.highlightDesc}
+                onChange={handleChangeDescription}
                 required
               />
               <p>Now, set your PRICE</p>
@@ -395,10 +480,15 @@ const CreateListing = () => {
                 placeholder="100"
                 name="price"
                 className="price"
+                value={formDescription.price}
+                onChange={handleChangeDescription}
                 required
               />
             </div>
           </div>
+          <button className="submit_btn" type="submit">
+            Create your listing
+          </button>
         </form>
       </div>
     </>
