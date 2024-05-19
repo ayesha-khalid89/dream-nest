@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/ListingDetails.scss";
 import { facilities } from "../data";
 import "react-date-range/dist/styles.css";
@@ -7,6 +7,7 @@ import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
+import { useSelector } from "react-redux";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -48,18 +49,49 @@ const ListingDetails = () => {
   const start = new Date(dateRange[0].startDate);
   const end = new Date(dateRange[0].endDate);
   const dayCount = Math.round(end - start) / (1000 * 60 * 60 * 24); //calculate the difference in days unit
+
+  //submit booking
+  const customerId = useSelector((state) => state?.user?._id);
+  const navigate = useNavigate();
+  const handleSubmit = async () => {
+    console.log("entered");
+    try {
+      const bookingForm = {
+        customerId,
+        listingId,
+        hostId: listing.creator._id,
+        startDate: dateRange[0].startDate.toDateString(),
+        endDate: dateRange[0].endDate.toDateString(),
+        totalPrice: listing.price * dayCount,
+      };
+      const response = await fetch("http://localhost:3001/bookings/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookingForm),
+      });
+      if (response.ok) {
+        navigate(`/${customerId}/trips`);
+      }
+    } catch (err) {
+      console.log("submit booking failed", err.message);
+    }
+  };
+
   return loading ? (
     <Loader />
   ) : (
     <>
-    <Navbar />
-    <div className="listing-details">
-      <div className="title">
-        <h1>{listing.title}</h1>
+      <Navbar />
+      <div className="listing-details">
+        <div className="title">
+          <h1>{listing.title}</h1>
         </div>
         <div className="photos">
           {listing.listingPhotoPaths?.map((item) => (
             <img
+              key={item}
               src={`http://localhost:3001/${item.replace("public", "")}`}
               alt="listing image"
             />
@@ -97,7 +129,7 @@ const ListingDetails = () => {
           <div>
             <h2>What does this place offer?</h2>
             <div className="amenities">
-              {listing.amenities[0].split(',').map((item, index) => (
+              {listing.amenities[0].split(",").map((item, index) => (
                 <div className="facility" key={index}>
                   <div className="facility_icon">
                     {facilities.find((facility) => facility.name === item).icon}
@@ -117,7 +149,7 @@ const ListingDetails = () => {
               <h2>Total Price: ${listing.price * dayCount}</h2>
               <p>Start Date:{dateRange[0].startDate.toDateString()}</p>
               <p>End Date:{dateRange[0].endDate.toDateString()}</p>
-              <button className="button" type="submit">
+              <button className="button" type="submit" onClick={handleSubmit}>
                 BOOKING
               </button>
             </div>

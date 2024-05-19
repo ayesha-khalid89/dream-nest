@@ -10,6 +10,7 @@ import { setLogout } from "../redux/state";
 const Navbar = () => {
   const [dropdownMenu, setDropdownMenu] = useState(false);
   const user = useSelector((state) => state.user);
+  console.log(user)
   const dispatch = useDispatch();
   return (
     <div className="navbar">
@@ -30,10 +31,18 @@ const Navbar = () => {
             Become a Host{" "}
           </a>
         ) : (
-          <a href="/login" className="host"></a>
+          <a href="/login" className="host">
+            {" "}
+            Become a Host
+          </a>
         )}
 
-        <button className="navbar_right_account" onClick={()=>{setDropdownMenu(!dropdownMenu)}}>
+        <button
+          className="navbar_right_account"
+          onClick={() => {
+            setDropdownMenu(!dropdownMenu);
+          }}
+        >
           <Menu sx={{ color: variables.darkgrey }} />
           {!user ? (
             <Person sx={{ color: variables.darkgrey }} />
@@ -58,8 +67,8 @@ const Navbar = () => {
 
         {dropdownMenu && user && (
           <div className="navbar_right_accountmenu">
-            <Link to="">Trip List</Link>
-            <Link to="">Wish List</Link>
+            <Link to={`/${user._id}/trips`}>Trip List</Link>
+            <Link to={`/${user._id}/wishList`}>Wish List</Link>
             <Link to="">Property list</Link>
             <Link to="">Reservation list</Link>
             <Link to="">Become a Host</Link>
