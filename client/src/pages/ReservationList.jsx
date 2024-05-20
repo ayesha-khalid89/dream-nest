@@ -1,43 +1,42 @@
 import React, { useEffect, useState } from "react";
 import "../styles/List.scss";
-import Loader from "../components/Loader";
-import Navbar from "../components/Navbar";
 import { useDispatch, useSelector } from "react-redux";
-import { setTripList } from "../redux/state";
+import Navbar from "../components/Navbar";
 import ListingCard from "../components/ListingCard";
+import Loader from "../components/Loader";
+import { setReservationList } from "../redux/state";
 import Footer from "../components/Footer";
-
-const TripList = () => {
-  const [loading, setLoading] = useState(true);
-  const userId = useSelector((state) => state.user._id);
-  const tripList = useSelector((state) => state.user.tripList);
+const ReservationList = () => {
   const dispatch = useDispatch();
-  const getTripList = async () => {
+  const user = useSelector((state) => state.user);
+  const [loading, setLoading] = useState(true);
+  const reservationList = user.reservationList;
+  console.log("redux", reservationList)
+  const getReservationList = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3001/users/${userId}/trips`,
+        `http://localhost:3001/users/${user._id}/reservations`,
         { method: "GET" }
       );
       const data = await response.json();
-      console.log(data);
-      dispatch(setTripList(data));
+      dispatch(setReservationList(data));
       setLoading(false);
     } catch (err) {
-      console.log("fetch trip list failed", err.message);
+      console.log("Property list fetching failed", err.message);
     }
   };
 
   useEffect(() => {
-    getTripList();
+    getReservationList();
   }, []);
   return loading ? (
     <Loader />
   ) : (
     <>
       <Navbar />
-      <h1 className="title-list">Your Trips List</h1>
+      <h1 className="title-list">Your Reservation List</h1>
       <div className="list">
-        {tripList?.map(({ listingId, hostId, startDate, endDate, totalPrice, booking=true }) => (
+        {reservationList?.map(({ listingId, hostId, startDate, endDate, totalPrice, booking=true }) => (
           <ListingCard
             key={listingId._id}
             creator={hostId._id}
@@ -59,4 +58,4 @@ const TripList = () => {
   );
 };
 
-export default TripList;
+export default ReservationList;

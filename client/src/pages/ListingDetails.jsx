@@ -8,6 +8,7 @@ import { DateRange } from "react-date-range";
 import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
+import Footer from "../components/Footer";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -98,7 +99,7 @@ const ListingDetails = () => {
           ))}
         </div>
         <h2>
-          {listing.type} in {listing.city}, {listing.procince},{" "}
+          {listing.type} in {listing.city}, {listing.province},{" "}
           {listing.country}{" "}
         </h2>
         <p>
@@ -156,6 +157,7 @@ const ListingDetails = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 };

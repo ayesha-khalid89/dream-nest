@@ -3,8 +3,10 @@ import { categories } from "../data";
 import { Link } from "react-router-dom";
 import { Category } from "@mui/icons-material";
 import "../styles/Categories.scss";
+import { useSelector } from "react-redux";
 
 const Categories = () => {
+  const user=useSelector(state =>state.user)
   return (
     <div className="categories">
       <h1>Explore Top Categories</h1>
@@ -12,7 +14,7 @@ const Categories = () => {
 
       <div className="categories_list">
         {categories?.slice(1, 7).map((category, index) => (
-          <Link to="" key={index}>
+          <Link to={user?`/category/${category.label}`:"/login"} key={index} >
             <div className="category" key={index}>
               <img src={category.img} alt={category.label} />
               <div className="overlay"></div>
